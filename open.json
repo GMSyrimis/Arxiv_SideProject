@@ -1,0 +1,387 @@
+openapi: 3.0.3
+info:
+  title: Global Geography API
+  version: 1.0.0
+  description: >
+    Unified schema definitions for administrative, statistical, and postal geographies 
+    across multiple countries (US, Canada, Australia, India, China).
+
+paths: {}
+
+components:
+  schemas:
+
+    # ----------------------
+    # Base
+    # ----------------------
+    BaseGeography:
+      type: object
+      required:
+        - value
+        - type
+      properties:
+        value:
+          type: object
+          description: Geography attributes
+        type:
+          type: string
+          description: Geography type identifier
+
+    # ----------------------
+    # United States
+    # ----------------------
+    USState:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                state:
+                  type: string
+                  example: "NY"
+            type:
+              example: "us_state"
+
+    USCounty:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                state:
+                  type: string
+                  example: "NY"
+                county:
+                  type: string
+                  example: "Tompkins"
+            type:
+              example: "us_county"
+
+    USCensusTract:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                fips:
+                  type: string
+                  example: "36109012300"
+            type:
+              example: "us_census_tract"
+
+    USCensusBlockGroup:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                fips:
+                  type: string
+                  example: "361090123002"
+            type:
+              example: "us_census_block_group"
+
+    USZipcode:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                zip:
+                  type: string
+                  example: "90210"
+            type:
+              example: "us_zipcode"
+
+    # ----------------------
+    # Canada
+    # ----------------------
+    CAProvince:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                province:
+                  type: string
+                  example: "ON"
+            type:
+              example: "ca_province"
+
+    CACensusTract:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                ctuid:
+                  type: string
+                  example: "5350034.01"
+            type:
+              example: "ca_census_tract"
+
+    CADisseminationArea:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                dauid:
+                  type: string
+                  example: "35060012"
+            type:
+              example: "ca_dissemination_area"
+
+    CAPostalCode:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                postal_code:
+                  type: string
+                  example: "M5H 2N2"
+            type:
+              example: "ca_postal_code"
+
+    # ----------------------
+    # Australia
+    # ----------------------
+    AUState:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                state:
+                  type: string
+                  example: "NSW"
+            type:
+              example: "au_state"
+
+    AUSa2:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                sa2_code:
+                  type: string
+                  example: "117011287"
+                sa2_name:
+                  type: string
+                  example: "Surry Hills"
+            type:
+              example: "au_sa2"
+
+    AUSa1:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                sa1:
+                  type: string
+                  example: "11702132101"
+            type:
+              example: "au_sa1"
+
+    AUMeshBlock:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                mb_code:
+                  type: string
+                  example: "80032510000"
+            type:
+              example: "au_mesh_block"
+
+    # ----------------------
+    # India
+    # ----------------------
+    INState:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                state:
+                  type: string
+                  example: "Karnataka"
+            type:
+              example: "in_state"
+
+    INDistrict:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                state:
+                  type: string
+                  example: "Karnataka"
+                district:
+                  type: string
+                  example: "Bengaluru Urban"
+            type:
+              example: "in_district"
+
+    INVillage:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                state:
+                  type: string
+                  example: "Karnataka"
+                district:
+                  type: string
+                  example: "Bengaluru Rural"
+                village:
+                  type: string
+                  example: "Channarayapatna"
+            type:
+              example: "in_village"
+
+    INPinCode:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                pin_code:
+                  type: string
+                  example: "560001"
+            type:
+              example: "in_pin_code"
+
+    # ----------------------
+    # China
+    # ----------------------
+    CNProvinceLevelUnit:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                province_name:
+                  type: string
+                  example: "Guangdong"
+                province_code:
+                  type: string
+                  example: "44"
+                province_type:
+                  type: string
+                  example: "province"
+            type:
+              example: "cn_province_level_unit"
+
+    CNPrefecture:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                province_code:
+                  type: string
+                  example: "44"
+                prefecture_name:
+                  type: string
+                  example: "Guangzhou"
+                prefecture_code:
+                  type: string
+                  example: "4401"
+            type:
+              example: "cn_prefecture"
+
+    CNCounty:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                prefecture_code:
+                  type: string
+                  example: "4401"
+                county_name:
+                  type: string
+                  example: "Tianhe District"
+                county_code:
+                  type: string
+                  example: "440106"
+            type:
+              example: "cn_county"
+
+    CNTownship:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                county_code:
+                  type: string
+                  example: "440106"
+                township_name:
+                  type: string
+                  example: "Shipai Subdistrict"
+                township_code:
+                  type: string
+                  example: "440106009"
+            type:
+              example: "cn_township"
+
+    CNVillage:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                township_code:
+                  type: string
+                  example: "440106009"
+                village_name:
+                  type: string
+                  example: "Shipai Village"
+                village_code:
+                  type: string
+                  example: "440106009001"
+            type:
+              example: "cn_village"
+
+    CNPostalCode:
+      allOf:
+        - $ref: '#/components/schemas/BaseGeography'
+        - type: object
+          properties:
+            value:
+              properties:
+                postal_code:
+                  type: string
+                  example: "510620"
+            type:
+              example: "cn_postal_code"
