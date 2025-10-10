@@ -12,6 +12,8 @@ tags:
     description: Endpoints for querying US REIT occupancy data.
   - name: Geographies / US
     description: All US-specific geography schemas.
+  - name: Requests / US
+    description: All US-specific request schemas.
 
 paths:
   /us/reit/occupancy:
