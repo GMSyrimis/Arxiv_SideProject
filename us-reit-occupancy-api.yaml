@@ -1,0 +1,159 @@
+openapi: 3.0.3
+info:
+  title: US REIT Occupancy API
+  version: 1.0.0
+  description: >
+    API for querying REIT occupancy and weighted occupancy data for the United States.
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+tags:
+  - name: US REIT Occupancy
+    description: Endpoints for US REIT occupancy data
+  - name: Geographies / US
+    description: US-specific geography schemas
+
+paths:
+  /US/REITs/Occupancy:
+    post:
+      summary: Query occupancy data
+      tags:
+        - US REIT Occupancy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/USOccupancyGeography'
+            example:
+              type: USRegion
+              value:
+                region: Midwest
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OccupancyResponse'
+              example:
+                - period: 2025-Q1
+                  occupancy: 0.87
+                  company: Public
+                - period: 2025-Q2
+                  occupancy: 0.84
+                  company: Public
+
+  /US/REITs/Occupancy/Weighted:
+    post:
+      summary: Query weighted occupancy data
+      tags:
+        - US REIT Occupancy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/USOccupancyGeography'
+            example:
+              type: USCBSA
+              value:
+                cbsa: Dallas-Fort Worth
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OccupancyResponse'
+              example:
+                - period: 2025-Q1
+                  occupancy: 0.91
+                - period: 2025-Q2
+                  occupancy: 0.89
+
+components:
+  schemas:
+    Geography:
+      type: object
+      description: Generic geography object supporting all geography types.
+      properties:
+        type:
+          type: string
+          description: Type of geography
+        value:
+          type: object
+      required:
+        - type
+        - value
+
+    Country:
+      type: object
+      properties:
+        country:
+          type: string
+          example: US
+      required:
+        - country
+
+    USRegion:
+      type: object
+      description: US region geography object.
+      x-tags:
+        - Geographies / US
+      properties:
+        region:
+          type: string
+          example: Midwest
+      required:
+        - region
+
+    USCBSA:
+      type: object
+      description: US Core Based Statistical Area (CBSA) geography object.
+      x-tags:
+        - Geographies / US
+      properties:
+        cbsa:
+          type: string
+          example: Dallas-Fort Worth
+      required:
+        - cbsa
+
+    USOccupancyGeography:
+      type: object
+      description: Geography object for US Occupancy endpoints. Limited to Country, USRegion, USCBSA.
+      x-tags:
+        - Geographies / US
+      properties:
+        type:
+          type: string
+          enum:
+            - Country
+            - USRegion
+            - USCBSA
+        value:
+          oneOf:
+            - $ref: '#/components/schemas/Country'
+            - $ref: '#/components/schemas/USRegion'
+            - $ref: '#/components/schemas/USCBSA'
+      required:
+        - type
+        - value
+
+    OccupancyResponse:
+      type: array
+      description: List of occupancy data points by period.
+      items:
+        type: object
+        properties:
+          period:
+            type: string
+            description: ISO 8601 formatted period (e.g. 2025-Q1 or 2024-Q1/2025-Q1)
+            example: 2025-Q1
+          occupancy:
+            type: number
+            example: 0.87
+          company:
+            type: string
+            example: Public
