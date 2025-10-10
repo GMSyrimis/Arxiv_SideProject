@@ -1,0 +1,479 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Occupancy API",
+    "version": "1.0.0",
+    "description": "Public API for querying occupancy and weighted occupancy data by geography and period."
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com/v1",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/occupancy": {
+      "post": {
+        "summary": "Query occupancy data",
+        "description": "Returns occupancy data for a given geography, period, and optional company filter.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OccupancyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OccupancyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/occupancy/weighted": {
+      "post": {
+        "summary": "Query weighted occupancy data",
+        "description": "Returns weighted occupancy data for a given geography and period.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeightedOccupancyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OccupancyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "OccupancyRequest": {
+        "type": "object",
+        "properties": {
+          "geography": {
+            "$ref": "#/components/schemas/OccupancyGeography"
+          },
+          "period": {
+            "type": "string",
+            "description": "ISO 8601 formatted period. Can be a single quarter (e.g., 2025-Q1) or a range (e.g., 2024-Q1/2025-Q1).",
+            "example": "2025-Q1"
+          },
+          "company": {
+            "type": "string",
+            "description": "Optional company name to filter by.",
+            "example": "Public"
+          }
+        },
+        "required": [
+          "geography"
+        ]
+      },
+      "WeightedOccupancyRequest": {
+        "type": "object",
+        "properties": {
+          "geography": {
+            "$ref": "#/components/schemas/OccupancyGeography"
+          },
+          "period": {
+            "type": "string",
+            "description": "ISO 8601 formatted period. Can be a single quarter or a range.",
+            "example": "2025-Q1"
+          }
+        },
+        "required": [
+          "geography"
+        ]
+      },
+      "OccupancyResponse": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "period": {
+              "type": "string",
+              "example": "2025-Q1"
+            },
+            "occupancy": {
+              "type": "number",
+              "example": 0.87
+            },
+            "company": {
+              "type": "string",
+              "example": "Public"
+            }
+          }
+        }
+      },
+      "Geography": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "US Region",
+              "US State",
+              "US CBSA",
+              "US City",
+              "US Zipcode",
+              "US County",
+              "US Address",
+              "US Address + Radius",
+              "US Address + Drive Time",
+              "US Structured Address",
+              "US Structured Address + Radius",
+              "US Structured Address + Drive Time",
+              "US Census Tract",
+              "US Census Block Group",
+              "Country"
+            ]
+          },
+          "value": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Country"
+              },
+              {
+                "$ref": "#/components/schemas/US.Region"
+              },
+              {
+                "$ref": "#/components/schemas/US.CBSA"
+              },
+              {
+                "$ref": "#/components/schemas/US.State"
+              },
+              {
+                "$ref": "#/components/schemas/US.City"
+              },
+              {
+                "$ref": "#/components/schemas/US.Zipcode"
+              },
+              {
+                "$ref": "#/components/schemas/US.County"
+              },
+              {
+                "$ref": "#/components/schemas/US.Address"
+              },
+              {
+                "$ref": "#/components/schemas/US.AddressRadius"
+              },
+              {
+                "$ref": "#/components/schemas/US.AddressDriveTime"
+              },
+              {
+                "$ref": "#/components/schemas/US.StructuredAddress"
+              },
+              {
+                "$ref": "#/components/schemas/US.StructuredAddressRadius"
+              },
+              {
+                "$ref": "#/components/schemas/US.StructuredAddressDriveTime"
+              },
+              {
+                "$ref": "#/components/schemas/US.CensusTract"
+              },
+              {
+                "$ref": "#/components/schemas/US.CensusBlockGroup"
+              }
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "value"
+        ]
+      },
+      "Country": {
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": "string",
+            "example": "US"
+          }
+        },
+        "required": [
+          "country"
+        ]
+      },
+      "OccupancyGeography": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "Country",
+              "US Region",
+              "US CBSA"
+            ]
+          },
+          "value": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Country"
+              },
+              {
+                "$ref": "#/components/schemas/US.Region"
+              },
+              {
+                "$ref": "#/components/schemas/US.CBSA"
+              }
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "value"
+        ]
+      },
+      "US.Region": {
+        "type": "object",
+        "properties": {
+          "region": {
+            "type": "string",
+            "example": "Midwest"
+          }
+        },
+        "required": [
+          "region"
+        ]
+      },
+      "US.CBSA": {
+        "type": "object",
+        "properties": {
+          "cbsa": {
+            "type": "string",
+            "example": "Dallas-Fort Worth"
+          }
+        },
+        "required": [
+          "cbsa"
+        ]
+      },
+      "US.State": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "example": "NY"
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "US.City": {
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": "string",
+            "example": "US"
+          },
+          "state": {
+            "type": "string",
+            "example": "TX"
+          },
+          "city": {
+            "type": "string",
+            "example": "Dallas"
+          }
+        },
+        "required": [
+          "country",
+          "state",
+          "city"
+        ]
+      },
+      "US.Zipcode": {
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": "string",
+            "example": "US"
+          },
+          "zipcode": {
+            "type": "string",
+            "example": "10016"
+          }
+        },
+        "required": [
+          "country",
+          "zipcode"
+        ]
+      },
+      "US.County": {
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": "string",
+            "example": "US"
+          },
+          "state": {
+            "type": "string",
+            "example": "TX"
+          },
+          "county": {
+            "type": "string",
+            "example": "Travis"
+          }
+        },
+        "required": [
+          "country",
+          "state",
+          "county"
+        ]
+      },
+      "US.Address": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "example": "2810 Mayflower Ave, Bronx, NY 10469"
+          }
+        },
+        "required": [
+          "address"
+        ]
+      },
+      "US.AddressRadius": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "example": "405 Lexington Ave, New York, NY 10174"
+          },
+          "radius": {
+            "type": "integer",
+            "example": 5000
+          }
+        },
+        "required": [
+          "address",
+          "radius"
+        ]
+      },
+      "US.AddressDriveTime": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "example": "405 Lexington Ave, New York, NY 10174"
+          },
+          "drive_time": {
+            "type": "integer",
+            "example": 15
+          }
+        },
+        "required": [
+          "address",
+          "drive_time"
+        ]
+      },
+      "US.StructuredAddress": {
+        "type": "object",
+        "properties": {
+          "street_address": {
+            "type": "string",
+            "example": "2810 Mayflower Ave"
+          },
+          "city": {
+            "type": "string",
+            "example": "Bronx"
+          },
+          "state": {
+            "type": "string",
+            "example": "NY"
+          },
+          "zip": {
+            "type": "string",
+            "example": "10469"
+          }
+        },
+        "required": [
+          "street_address",
+          "city",
+          "state",
+          "zip"
+        ]
+      },
+      "US.StructuredAddressRadius": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/USStructuredAddress"
+          },
+          "radius": {
+            "type": "integer",
+            "example": 5000
+          }
+        },
+        "required": [
+          "address",
+          "radius"
+        ]
+      },
+      "US.StructuredAddressDriveTime": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/USStructuredAddress"
+          },
+          "drive_time": {
+            "type": "integer",
+            "example": 15
+          }
+        },
+        "required": [
+          "address",
+          "drive_time"
+        ]
+      },
+      "US.CensusTract": {
+        "type": "object",
+        "properties": {
+          "fips": {
+            "type": "string",
+            "example": "36109012300"
+          }
+        },
+        "required": [
+          "fips"
+        ]
+      },
+      "US.CensusBlockGroup": {
+        "type": "object",
+        "properties": {
+          "fips": {
+            "type": "string",
+            "example": "361090123002"
+          }
+        },
+        "required": [
+          "fips"
+        ]
+      }
+    }
+  }
+}
