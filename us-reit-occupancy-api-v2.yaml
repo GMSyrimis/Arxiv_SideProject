@@ -5,22 +5,22 @@ info:
   description: >
     API for querying REIT occupancy and weighted occupancy data for the United States.
 servers:
-  - url: https://api.example.com/v1
+  - url: https://api.example.com/v1/us
     description: Production server
 tags:
-  - name: Occupancy
-    description: Endpoints for querying US REIT occupancy data.
+  - name: REIT Data
+    description: Endpoints for querying US REIT data.
   - name: Geographies / US
     description: All US-specific geography schemas.
   - name: Requests / US
     description: All US-specific request schemas.
 
 paths:
-  /us/reit/occupancy:
+  /reit/occupancy:
     post:
       summary: Query occupancy data
       tags:
-        - Occupancy
+        - REIT Data
       requestBody:
         required: true
         content:
@@ -49,11 +49,11 @@ paths:
                   occupancy: 0.84
                   company: Public
 
-  /us/reit/occupancy/weighted:
+  /reit/occupancy/weighted:
     post:
       summary: Query weighted occupancy data
       tags:
-        - Occupancy
+        - REIT Data
       requestBody:
         required: true
         content:
