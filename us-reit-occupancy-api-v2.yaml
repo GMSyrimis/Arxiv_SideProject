@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: US REIT Occupancy API
+  title: Occupancy API
   version: 1.0.0
   description: >
     API for querying REIT occupancy and weighted occupancy data for the United States.
@@ -9,7 +9,7 @@ servers:
     description: Production server
 tags:
   - name: Occupancy
-    description: Endpoints for querying US REIT occupancy data.
+    description: Endpoints for querying REIT occupancy data.
   - name: Geographies / US
     description: All US-specific geography schemas.
 
