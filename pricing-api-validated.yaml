@@ -1,0 +1,454 @@
+openapi: 3.1.0
+info:
+  title: Pricing API
+  version: 1.0.1
+  description: |
+    The Pricing API allows developers to pull pricing data for self-storage facilities and geographies.
+    Time rollups are defined via the timeframe object; geography rollups are accessed through market rollup endpoints.
+    Features are combined using **AND** logic; to achieve **OR** behavior, send separate requests.
+
+servers:
+  - url: https://api.example.com
+    description: Production server
+
+tags:
+  - name: Facility Pricing
+  - name: Market Pricing
+
+components:
+  schemas:
+    RollupEnum:
+      type: string
+      enum: [daily, weekly, monthly, quarterly, yearly]
+
+    Timeframe:
+      type: object
+      required: [type, value, rollup]
+      properties:
+        type:
+          type: string
+          enum: [date, week, month, quarter, year]
+        value:
+          type: string
+          description: Supports single or range values (e.g. "2025-09" or "2025-09/2025-10")
+        rollup:
+          $ref: '#/components/schemas/RollupEnum'
+
+    Facility:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+
+    Geography:
+      type: object
+      properties:
+        address:
+          type: string
+        distance:
+          type: number
+        units:
+          type: string
+          enum: [miles, kilometers]
+        type:
+          type: string
+          enum: [us_address_radius]
+
+    PricingEntry:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [web, instore]
+        price:
+          type: number
+          nullable: true
+        currency:
+          type: string
+          example: USD
+        last_updated:
+          type: string
+          format: date-time
+          nullable: true
+
+    AggregatedPricingEntry:
+      type: object
+      properties:
+        date:
+          type: string
+        type:
+          type: string
+          enum: [web, instore]
+        high:
+          type: number
+          nullable: true
+        low:
+          type: number
+          nullable: true
+        avg:
+          type: number
+          nullable: true
+        currency:
+          type: string
+          example: USD
+
+    UnitPricing:
+      type: object
+      properties:
+        unit_size:
+          type: string
+        status:
+          type: string
+          nullable: true
+        promo_text:
+          type: string
+          nullable: true
+        features:
+          type: array
+          items:
+            type: string
+        source_url:
+          type: string
+          format: uri
+          nullable: true
+        pricing:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/PricingEntry'
+              - $ref: '#/components/schemas/AggregatedPricingEntry'
+
+    FacilityResponse:
+      type: object
+      properties:
+        facility:
+          $ref: '#/components/schemas/Facility'
+        units:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnitPricing'
+
+    MarketResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/FacilityResponse'
+
+    MarketRollupResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          units:
+            type: array
+            items:
+              $ref: '#/components/schemas/UnitPricing'
+
+paths:
+  /facility/pricing/current:
+    post:
+      tags: [Facility Pricing]
+      summary: Get current facility pricing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [address, unit_sizes, features, pricing_type]
+              properties:
+                address: { type: string }
+                unit_sizes: { type: array, items: { type: string } }
+                features: { type: array, items: { type: string } }
+                pricing_type: { type: array, items: { type: string, enum: [web, instore] } }
+            example:
+              address: "123 Main St, Sarasota, FL, 34231, USA"
+              unit_sizes: ["5x5", "5x10"]
+              features: ["climate_controlled", "first_floor"]
+              pricing_type: ["web", "instore"]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilityResponse'
+              example:
+                facility:
+                  id: "asdfs-sdfs-vsd-asdvvsa"
+                  name: "Cubesmart"
+                  address: "123 Main St, Sarasota, FL, 34231, USA"
+                units:
+                  - unit_size: "5x5"
+                    status: "available"
+                    promo_text: "1st Month Free"
+                    features: ["climate_controlled", "first_floor"]
+                    source_url: "https://example.com/units/5x5"
+                    pricing:
+                      - { type: "web", price: 97.00, currency: "USD", last_updated: "2025-10-27T18:41:29Z" }
+                      - { type: "instore", price: 107.99, currency: "USD", last_updated: "2025-10-27T18:41:29Z" }
+                  - unit_size: "5x10"
+                    status: "sold out"
+                    promo_text: null
+                    features: ["climate_controlled", "first_floor"]
+                    source_url: "https://example.com/units/5x10"
+                    pricing: []
+
+  /facility/pricing/historical:
+    post:
+      tags: [Facility Pricing]
+      summary: Get historical facility pricing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [address, timeframe, unit_sizes, features, pricing_type]
+              properties:
+                address: { type: string }
+                timeframe: { $ref: '#/components/schemas/Timeframe' }
+                unit_sizes: { type: array, items: { type: string } }
+                features: { type: array, items: { type: string } }
+                pricing_type: { type: array, items: { type: string, enum: [web, instore] } }
+            example:
+              address: "123 Main St, Sarasota, FL, 34231, USA"
+              timeframe: { type: "date", value: "2025-09-13/2025-10-13", rollup: "daily" }
+              unit_sizes: ["5x5"]
+              features: ["climate_controlled","first_floor"]
+              pricing_type: ["web","instore"]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilityResponse'
+              example:
+                facility:
+                  id: "asdfs-sdfs-vsd-asdvvsa"
+                  name: "Cubesmart"
+                  address: "123 Main St, Sarasota, FL, 34231, USA"
+                units:
+                  - unit_size: "5x5"
+                    features: ["climate_controlled","first_floor"]
+                    pricing:
+                      - { date: "2025-09-13", type: "web", high: 97.00, low: 97.00, avg: 97.00, currency: "USD" }
+                      - { date: "2025-09-14", type: "web", high: null, low: null, avg: null, currency: "USD" }
+
+  /market/pricing/current:
+    post:
+      tags: [Market Pricing]
+      summary: Get current pricing for facilities within a market
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [geography, unit_sizes, features, pricing_type]
+              properties:
+                geography: { $ref: '#/components/schemas/Geography' }
+                unit_sizes: { type: array, items: { type: string } }
+                features: { type: array, items: { type: string } }
+                pricing_type: { type: array, items: { type: string, enum: [web, instore] } }
+            example:
+              geography:
+                address: "405 Lexington Ave, New York, NY 10174"
+                distance: 4.2
+                units: "miles"
+                type: "us_address_radius"
+              unit_sizes: ["5x5", "5x10"]
+              features: ["climate_controlled","first_floor"]
+              pricing_type: ["web","instore"]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketResponse'
+              example:
+                - facility:
+                    id: "asdfs-sdfs-vsd-asdvvsa"
+                    name: "Cubesmart"
+                    address: "123 Main St, Sarasota, FL, 34231, USA"
+                  units:
+                    - unit_size: "5x5"
+                      status: "available"
+                      promo_text: "1st Month Free"
+                      features: ["climate_controlled","first_floor"]
+                      source_url: "https://example.com/units/5x5"
+                      pricing:
+                        - { type: "web", price: 97.00, currency: "USD", last_updated: "2025-10-27T18:41:29Z" }
+                        - { type: "instore", price: 107.99, currency: "USD", last_updated: "2025-10-27T18:41:29Z" }
+                    - unit_size: "5x10"
+                      status: "sold out"
+                      promo_text: null
+                      features: ["climate_controlled","first_floor"]
+                      source_url: "https://example.com/units/5x10"
+                      pricing: []
+                - facility:
+                    id: "qwerqw-qwerfs-vsd-weeeew"
+                    name: "ExtraSpace"
+                    address: "234 Main St, Sarasota, FL, 34231, USA"
+                  units:
+                    - unit_size: "5x5"
+                      status: "available"
+                      promo_text: "1st Month Free"
+                      features: ["climate_controlled","first_floor"]
+                      source_url: "https://example.com/units/5x5"
+                      pricing:
+                        - { type: "web", price: 97.00, currency: "USD", last_updated: "2025-10-27T18:41:29Z" }
+                        - { type: "instore", price: 107.99, currency: "USD", last_updated: "2025-10-27T18:41:29Z" }
+                    - unit_size: "5x10"
+                      status: "sold out"
+                      promo_text: null
+                      features: ["climate_controlled","first_floor"]
+                      source_url: "https://example.com/units/5x10"
+                      pricing: []
+
+  /market/pricing/current/rollup:
+    post:
+      tags: [Market Pricing]
+      summary: Get current market-level rolled-up pricing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [geography, unit_sizes, features, pricing_type]
+              properties:
+                geography: { $ref: '#/components/schemas/Geography' }
+                unit_sizes: { type: array, items: { type: string } }
+                features: { type: array, items: { type: string } }
+                pricing_type: { type: array, items: { type: string, enum: [web, instore] } }
+            example:
+              geography:
+                address: "405 Lexington Ave, New York, NY 10174"
+                distance: 4.2
+                units: "miles"
+                type: "us_address_radius"
+              unit_sizes: ["5x5", "5x10"]
+              features: ["climate_controlled","first_floor"]
+              pricing_type: ["web","instore"]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketRollupResponse'
+              example:
+                - units:
+                    - unit_size: "5x5"
+                      features: ["climate_controlled","first_floor"]
+                      pricing:
+                        - { date: "2025-09-13", type: "web", high: 197.00, low: 97.00, avg: 127.00, currency: "USD" }
+                        - { date: "2025-09-13", type: "instore", high: 197.00, low: 97.00, avg: 127.00, currency: "USD" }
+                    - unit_size: "5x10"
+                      features: ["climate_controlled","first_floor"]
+                      pricing:
+                        - { date: "2025-09-13", type: "web", high: 197.00, low: 97.00, avg: 127.00, currency: "USD" }
+                        - { date: "2025-09-13", type: "instore", high: 197.00, low: 97.00, avg: 127.00, currency: "USD" }
+
+  /market/pricing/historical:
+    post:
+      tags: [Market Pricing]
+      summary: Get historical pricing for facilities within a market
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [geography, timeframe, unit_sizes, features, pricing_type]
+              properties:
+                geography: { $ref: '#/components/schemas/Geography' }
+                timeframe: { $ref: '#/components/schemas/Timeframe' }
+                unit_sizes: { type: array, items: { type: string } }
+                features: { type: array, items: { type: string } }
+                pricing_type: { type: array, items: { type: string, enum: [web, instore] } }
+            example:
+              geography:
+                address: "405 Lexington Ave, New York, NY 10174"
+                distance: 4.2
+                units: "miles"
+                type: "us_address_radius"
+              timeframe: { type: "date", value: "2025-09-13/2025-10-13", rollup: "daily" }
+              unit_sizes: ["5x5", "5x10"]
+              features: ["climate_controlled","first_floor"]
+              pricing_type: ["web","instore"]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketResponse'
+              example:
+                facility:
+                  id: "asdfs-sdfs-vsd-asdvvsa"
+                  name: "Cubesmart"
+                  address: "123 Main St, Sarasota, FL, 34231, USA"
+                units:
+                  - unit_size: "5x5"
+                    features: ["climate_controlled","first_floor"]
+                    pricing:
+                      - { date: "2025-09-13", type: "web", high: 97.00, low: 97.00, avg: 97.00, currency: "USD" }
+                      - { date: "2025-09-14", type: "web", high: null, low: null, avg: null, currency: "USD" }
+
+  /market/pricing/historical/rollup:
+    post:
+      tags: [Market Pricing]
+      summary: Get historical rolled-up pricing for a market
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [geography, timeframe, unit_sizes, features, pricing_type]
+              properties:
+                geography: { $ref: '#/components/schemas/Geography' }
+                timeframe: { $ref: '#/components/schemas/Timeframe' }
+                unit_sizes: { type: array, items: { type: string } }
+                features: { type: array, items: { type: string } }
+                pricing_type: { type: array, items: { type: string, enum: [web, instore] } }
+            example:
+              geography:
+                address: "405 Lexington Ave, New York, NY 10174"
+                distance: 4.2
+                units: "miles"
+                type: "us_address_radius"
+              timeframe: { type: "month", value: "2025-09/2025-10", rollup: "monthly" }
+              unit_sizes: ["5x5", "5x10"]
+              features: ["climate_controlled","first_floor"]
+              pricing_type: ["web","instore"]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketRollupResponse'
+              example:
+                units:
+                  - unit_size: "5x5"
+                    features: ["climate_controlled","first_floor"]
+                    pricing:
+                      - { date: "2025-09", type: "web", high: 197.00, low: 97.00, avg: 127.00, currency: "USD" }
+                      - { date: "2025-10", type: "web", high: 187.00, low: 87.00, avg: 117.00, currency: "USD" }
+                      - { date: "2025-09", type: "instore", high: 197.00, low: 97.00, avg: 127.00, currency: "USD" }
+                      - { date: "2025-10", type: "instore", high: 187.00, low: 87.00, avg: 117.00, currency: "USD" }
+                  - unit_size: "5x10"
+                    features: ["climate_controlled","first_floor"]
+                    pricing:
+                      - { date: "2025-09", type: "web", high: 197.00, low: 97.00, avg: 127.00, currency: "USD" }
+                      - { date: "2025-10", type: "web", high: 187.00, low: 87.00, avg: 117.00, currency: "USD" }
+                      - { date: "2025-09", type: "instore", high: 197.00, low: 97.00, avg: 127.00, currency: "USD" }
+                      - { date: "2025-10", type: "instore", high: 187.00, low: 87.00, avg: 117.00, currency: "USD" }
