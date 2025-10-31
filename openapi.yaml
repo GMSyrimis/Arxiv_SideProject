@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Storage Facility API
+  title: Radius+ API
   description: |
     API for accessing storage facility pricing data and REIT occupancy information.
     
@@ -25,6 +25,8 @@ tags:
     description: Facility-level pricing data
   - name: Market Pricing
     description: Market-level pricing data
+  - name: Geographies
+    description: All geography type schemas
 
 paths:
   /reit/occupancy/usa:
@@ -58,6 +60,17 @@ paths:
                     type: string
                   description: Optional array of company names to filter by
                   example: ["Public Storage", "Extra Space"]
+            example:
+              geography:
+                type: USRegion
+                value:
+                  region: Midwest
+              timeframe:
+                period:
+                  type: quarter
+                  value: 2025-Q1/2025-Q2
+                rollup: quarterly
+              companies: ["Public Storage", "Extra Space"]
       responses:
         '200':
           description: Successful response
@@ -99,6 +112,17 @@ paths:
                     type: string
                   description: Optional array of company names to filter by
                   example: ["Public Storage", "Extra Space"]
+            example:
+              geography:
+                type: USRegion
+                value:
+                  region: Midwest
+              timeframe:
+                period:
+                  type: quarter
+                  value: 2025-Q1/2025-Q2
+                rollup: quarterly
+              companies: ["Public Storage", "Extra Space"]
       responses:
         '200':
           description: Successful response
@@ -237,6 +261,16 @@ paths:
                     type: string
                     enum: [web, instore]
                   example: ["web", "instore"]
+            example:
+              geography:
+                type: USAddressRadius
+                value:
+                  address: "405 Lexington Ave, New York, NY 10174, USA"
+                  distance: 4.2
+                  units: miles
+              unit_sizes: ["5x5", "5x10"]
+              features: ["climate_controlled"]
+              pricing_type: ["web", "instore"]
       responses:
         '200':
           description: Successful response
@@ -396,86 +430,84 @@ components:
   schemas:
     # Geography Types
     Geography:
-      oneOf:
-        - $ref: '#/components/schemas/CountryGeography'
-        - $ref: '#/components/schemas/PolygonGeography'
-        - $ref: '#/components/schemas/LatLngRadiusGeography'
-        - $ref: '#/components/schemas/LatLngDriveTimeGeography'
-        - $ref: '#/components/schemas/LatLngGeography'
-        - $ref: '#/components/schemas/USRegionGeography'
-        - $ref: '#/components/schemas/USStateGeography'
-        - $ref: '#/components/schemas/USCountyGeography'
-        - $ref: '#/components/schemas/USCBSAGeography'
-        - $ref: '#/components/schemas/USCityGeography'
-        - $ref: '#/components/schemas/USZipcodeGeography'
-        - $ref: '#/components/schemas/USCensusTractGeography'
-        - $ref: '#/components/schemas/USCensusBlockGroupGeography'
-        - $ref: '#/components/schemas/USAddressGeography'
-        - $ref: '#/components/schemas/USStructuredAddressGeography'
-        - $ref: '#/components/schemas/USAddressRadiusGeography'
-        - $ref: '#/components/schemas/USAddressDriveTimeGeography'
-        - $ref: '#/components/schemas/USStructuredAddressRadiusGeography'
-        - $ref: '#/components/schemas/USStructuredAddressDriveTimeGeography'
-      discriminator:
-        propertyName: type
-        mapping:
-          country: '#/components/schemas/CountryGeography'
-          wkt: '#/components/schemas/PolygonGeography'
-          lat_lng_radius: '#/components/schemas/LatLngRadiusGeography'
-          lat_lng_drive_time: '#/components/schemas/LatLngDriveTimeGeography'
-          lat_lng: '#/components/schemas/LatLngGeography'
-          us_region: '#/components/schemas/USRegionGeography'
-          us_state: '#/components/schemas/USStateGeography'
-          us_county: '#/components/schemas/USCountyGeography'
-          us_cbsa: '#/components/schemas/USCBSAGeography'
-          us_city: '#/components/schemas/USCityGeography'
-          us_zipcode: '#/components/schemas/USZipcodeGeography'
-          us_census_tract: '#/components/schemas/USCensusTractGeography'
-          us_census_block_group: '#/components/schemas/USCensusBlockGroupGeography'
-          us_address: '#/components/schemas/USAddressGeography'
-          us_structured_address: '#/components/schemas/USStructuredAddressGeography'
-          us_address_radius: '#/components/schemas/USAddressRadiusGeography'
-          us_address_drive_time: '#/components/schemas/USAddressDriveTimeGeography'
-          us_structured_address_radius: '#/components/schemas/USStructuredAddressRadiusGeography'
-          us_structured_address_drive_time: '#/components/schemas/USStructuredAddressDriveTimeGeography'
-
-    CountryGeography:
       type: object
-      required:
-        - type
-        - country
+      description: Generic geography object supporting all geography types.
       properties:
         type:
           type: string
-          enum: [country]
+          description: Type of geography
+          enum:
+            - Country
+            - Polygon
+            - LatLngRadius
+            - LatLngDriveTime
+            - LatLng
+            - USRegion
+            - USState
+            - USCounty
+            - USCBSA
+            - USCity
+            - USZipcode
+            - USCensusTract
+            - USCensusBlockGroup
+            - USAddress
+            - USStructuredAddress
+            - USAddressRadius
+            - USAddressDriveTime
+            - USStructuredAddressRadius
+            - USStructuredAddressDriveTime
+        value:
+          oneOf:
+            - $ref: '#/components/schemas/CountryValue'
+            - $ref: '#/components/schemas/PolygonValue'
+            - $ref: '#/components/schemas/LatLngRadiusValue'
+            - $ref: '#/components/schemas/LatLngDriveTimeValue'
+            - $ref: '#/components/schemas/LatLngValue'
+            - $ref: '#/components/schemas/USRegionValue'
+            - $ref: '#/components/schemas/USStateValue'
+            - $ref: '#/components/schemas/USCountyValue'
+            - $ref: '#/components/schemas/USCBSAValue'
+            - $ref: '#/components/schemas/USCityValue'
+            - $ref: '#/components/schemas/USZipcodeValue'
+            - $ref: '#/components/schemas/USCensusTractValue'
+            - $ref: '#/components/schemas/USCensusBlockGroupValue'
+            - $ref: '#/components/schemas/USAddressValue'
+            - $ref: '#/components/schemas/USStructuredAddressValue'
+            - $ref: '#/components/schemas/USAddressRadiusValue'
+            - $ref: '#/components/schemas/USAddressDriveTimeValue'
+            - $ref: '#/components/schemas/USStructuredAddressRadiusValue'
+            - $ref: '#/components/schemas/USStructuredAddressDriveTimeValue'
+      required:
+        - type
+        - value
+
+    CountryValue:
+      type: object
+      x-tags:
+        - Geographies
+      properties:
         country:
           type: string
           example: "USA"
-
-    PolygonGeography:
-      type: object
       required:
-        - type
-        - wkt
+        - country
+
+    PolygonValue:
+      type: object
+      x-tags:
+        - Geographies
       properties:
-        type:
-          type: string
-          enum: [wkt]
         wkt:
           type: string
           example: "POLYGON ((-73.993778 40.770662, -74.012833 40.741403, -73.990517 40.726316, -73.963051 40.747387, -73.954639 40.763901, -73.993778 40.770662))"
-
-    LatLngRadiusGeography:
-      type: object
       required:
-        - type
-        - lat_lng
-        - distance
-        - units
+        - wkt
+
+    LatLngRadiusValue:
+      type: object
+      x-tags:
+        - Geographies
       properties:
-        type:
-          type: string
-          enum: [lat_lng_radius]
         lat_lng:
           type: array
           items:
@@ -490,18 +522,16 @@ components:
           type: string
           enum: [miles, kilometers]
           example: "miles"
-
-    LatLngDriveTimeGeography:
-      type: object
       required:
-        - type
         - lat_lng
-        - drive_time
+        - distance
         - units
+
+    LatLngDriveTimeValue:
+      type: object
+      x-tags:
+        - Geographies
       properties:
-        type:
-          type: string
-          enum: [lat_lng_drive_time]
         lat_lng:
           type: array
           items:
@@ -516,16 +546,16 @@ components:
           type: string
           enum: [minutes]
           example: "minutes"
-
-    LatLngGeography:
-      type: object
       required:
-        - type
         - lat_lng
+        - drive_time
+        - units
+
+    LatLngValue:
+      type: object
+      x-tags:
+        - Geographies
       properties:
-        type:
-          type: string
-          enum: [lat_lng]
         lat_lng:
           type: array
           items:
@@ -533,74 +563,62 @@ components:
           minItems: 2
           maxItems: 2
           example: [-13.324233, 12.1234423]
-
-    USRegionGeography:
-      type: object
       required:
-        - type
-        - region
+        - lat_lng
+
+    USRegionValue:
+      type: object
+      x-tags:
+        - Geographies
       properties:
-        type:
-          type: string
-          enum: [us_region]
         region:
           type: string
           example: "Midwest"
-
-    USStateGeography:
-      type: object
       required:
-        - type
-        - state
+        - region
+
+    USStateValue:
+      type: object
+      x-tags:
+        - Geographies
       properties:
-        type:
-          type: string
-          enum: [us_state]
         state:
           type: string
           example: "NY"
-
-    USCountyGeography:
-      type: object
       required:
-        - type
         - state
-        - county
+
+    USCountyValue:
+      type: object
+      x-tags:
+        - Geographies
       properties:
-        type:
-          type: string
-          enum: [us_county]
         state:
           type: string
           example: "NY"
         county:
           type: string
           example: "Tompkins"
-
-    USCBSAGeography:
-      type: object
       required:
-        - type
-        - cbsa
+        - state
+        - county
+
+    USCBSAValue:
+      type: object
+      x-tags:
+        - Geographies
       properties:
-        type:
-          type: string
-          enum: [us_cbsa]
         cbsa:
           type: string
           example: "Dallas-Fort Worth-Arlington, TX"
-
-    USCityGeography:
-      type: object
       required:
-        - type
-        - country
-        - state
-        - city
+        - cbsa
+
+    USCityValue:
+      type: object
+      x-tags:
+        - Geographies
       properties:
-        type:
-          type: string
-          enum: [us_city]
         country:
           type: string
           example: "USA"
@@ -610,76 +628,64 @@ components:
         city:
           type: string
           example: "Dallas"
-
-    USZipcodeGeography:
-      type: object
       required:
-        - type
         - country
-        - zipcode
+        - state
+        - city
+
+    USZipcodeValue:
+      type: object
+      x-tags:
+        - Geographies
       properties:
-        type:
-          type: string
-          enum: [us_zipcode]
         country:
           type: string
           example: "US"
         zipcode:
           type: string
           example: "90210"
-
-    USCensusTractGeography:
-      type: object
       required:
-        - type
-        - fips
+        - country
+        - zipcode
+
+    USCensusTractValue:
+      type: object
+      x-tags:
+        - Geographies
       properties:
-        type:
-          type: string
-          enum: [us_census_tract]
         fips:
           type: string
           example: "36109012300"
-
-    USCensusBlockGroupGeography:
-      type: object
       required:
-        - type
         - fips
+
+    USCensusBlockGroupValue:
+      type: object
+      x-tags:
+        - Geographies
       properties:
-        type:
-          type: string
-          enum: [us_census_block_group]
         fips:
           type: string
           example: "361090123002"
-
-    USAddressGeography:
-      type: object
       required:
-        - type
-        - address
+        - fips
+
+    USAddressValue:
+      type: object
+      x-tags:
+        - Geographies
       properties:
-        type:
-          type: string
-          enum: [us_address]
         address:
           type: string
           example: "2810 Mayflower St, Sarasota, FL 34231, USA"
-
-    USStructuredAddressGeography:
-      type: object
       required:
-        - type
-        - street_address
-        - city
-        - state
-        - zipcode
-        - country
+        - address
+
+    USStructuredAddressValue:
+      type: object
+      x-tags:
+        - Geographies
       properties:
-        type:
-          type: string
-          enum: [us_structured_address]
         street_address:
           type: string
           example: "2810 Mayflower St."
@@ -698,18 +704,18 @@ components:
         country:
           type: string
           example: "USA"
-
-    USAddressRadiusGeography:
-      type: object
       required:
-        - type
-        - address
-        - distance
-        - units
+        - street_address
+        - city
+        - state
+        - zipcode
+        - country
+
+    USAddressRadiusValue:
+      type: object
+      x-tags:
+        - Geographies
       properties:
-        type:
-          type: string
-          enum: [us_address_radius]
         address:
           type: string
           example: "405 Lexington Ave, New York, NY 10174, USA"
@@ -720,18 +726,16 @@ components:
           type: string
           enum: [miles, kilometers]
           example: "miles"
-
-    USAddressDriveTimeGeography:
-      type: object
       required:
-        - type
         - address
-        - drive_time
+        - distance
         - units
+
+    USAddressDriveTimeValue:
+      type: object
+      x-tags:
+        - Geographies
       properties:
-        type:
-          type: string
-          enum: [us_address_drive_time]
         address:
           type: string
           example: "405 Lexington Ave, New York, NY 10174, USA"
@@ -742,18 +746,16 @@ components:
           type: string
           enum: [minutes]
           example: "minutes"
-
-    USStructuredAddressRadiusGeography:
-      type: object
       required:
-        - type
         - address
-        - distance
+        - drive_time
         - units
+
+    USStructuredAddressRadiusValue:
+      type: object
+      x-tags:
+        - Geographies
       properties:
-        type:
-          type: string
-          enum: [us_structured_address_radius]
         address:
           $ref: '#/components/schemas/StructuredAddress'
         distance:
@@ -763,18 +765,16 @@ components:
           type: string
           enum: [miles, kilometers]
           example: "miles"
-
-    USStructuredAddressDriveTimeGeography:
-      type: object
       required:
-        - type
         - address
-        - drive_time
+        - distance
         - units
+
+    USStructuredAddressDriveTimeValue:
+      type: object
+      x-tags:
+        - Geographies
       properties:
-        type:
-          type: string
-          enum: [us_structured_address_drive_time]
         address:
           $ref: '#/components/schemas/StructuredAddress'
         drive_time:
@@ -784,15 +784,15 @@ components:
           type: string
           enum: [minutes]
           example: "minutes"
+      required:
+        - address
+        - drive_time
+        - units
 
     StructuredAddress:
       type: object
-      required:
-        - street_address
-        - city
-        - state
-        - zipcode
-        - country
+      x-tags:
+        - Geographies
       properties:
         street_address:
           type: string
@@ -812,106 +812,37 @@ components:
         country:
           type: string
           example: "US"
+      required:
+        - street_address
+        - city
+        - state
+        - zipcode
+        - country
 
     # Timeframe Types
     Timeframe:
       type: object
-      required:
-        - period
-        - rollup
+      description: Defines the time period and rollup aggregation level.
       properties:
         period:
-          $ref: '#/components/schemas/Period'
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [date, week, month, quarter, year]
+            value:
+              type: string
+              description: ISO-8601 formatted value. Can be a single period or a range (e.g., "2025-10-13" or "2025-10-11/2025-10-13")
+          required:
+            - type
+            - value
         rollup:
           type: string
           enum: [daily, weekly, monthly, quarterly, yearly]
           example: "daily"
-
-    Period:
-      oneOf:
-        - $ref: '#/components/schemas/DatePeriod'
-        - $ref: '#/components/schemas/WeekPeriod'
-        - $ref: '#/components/schemas/MonthPeriod'
-        - $ref: '#/components/schemas/QuarterPeriod'
-        - $ref: '#/components/schemas/YearPeriod'
-      discriminator:
-        propertyName: type
-        mapping:
-          date: '#/components/schemas/DatePeriod'
-          week: '#/components/schemas/WeekPeriod'
-          month: '#/components/schemas/MonthPeriod'
-          quarter: '#/components/schemas/QuarterPeriod'
-          year: '#/components/schemas/YearPeriod'
-
-    DatePeriod:
-      type: object
       required:
-        - type
-        - value
-      properties:
-        type:
-          type: string
-          enum: [date]
-        value:
-          type: string
-          description: ISO-8601 date or date range (YYYY-MM-DD or YYYY-MM-DD/YYYY-MM-DD)
-          example: "2025-10-13"
-
-    WeekPeriod:
-      type: object
-      required:
-        - type
-        - value
-      properties:
-        type:
-          type: string
-          enum: [week]
-        value:
-          type: string
-          description: ISO-8601 week or week range (YYYY-Www or YYYY-Www/YYYY-Www)
-          example: "2025-W42"
-
-    MonthPeriod:
-      type: object
-      required:
-        - type
-        - value
-      properties:
-        type:
-          type: string
-          enum: [month]
-        value:
-          type: string
-          description: ISO-8601 month or month range (YYYY-MM or YYYY-MM/YYYY-MM)
-          example: "2025-10"
-
-    QuarterPeriod:
-      type: object
-      required:
-        - type
-        - value
-      properties:
-        type:
-          type: string
-          enum: [quarter]
-        value:
-          type: string
-          description: Quarter or quarter range (YYYY-Qq or YYYY-Qq/YYYY-Qq)
-          example: "2025-Q1"
-
-    YearPeriod:
-      type: object
-      required:
-        - type
-        - value
-      properties:
-        type:
-          type: string
-          enum: [year]
-        value:
-          type: string
-          description: Year or year range (YYYY or YYYY/YYYY)
-          example: "2025"
+        - period
+        - rollup
 
     # REIT Schemas
     REITOccupancyData:
@@ -1139,4 +1070,3 @@ components:
         currency:
           type: string
           example: "USD"
-
