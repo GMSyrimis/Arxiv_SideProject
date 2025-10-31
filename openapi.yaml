@@ -31,7 +31,7 @@ paths:
     post:
       tags:
         - REIT
-      summary: Get REIT occupancy data
+      summary: reit/occupancy/usa
       description: |
         Gets REIT occupancy information in the USA. This is publicly known information provided 
         by annual reports. Each company provided information on the most relevant CBSAs for their 
@@ -72,7 +72,7 @@ paths:
     post:
       tags:
         - REIT
-      summary: Get weighted REIT occupancy data
+      summary: reit/occupancy/usa/weighted
       description: |
         For each period, the occupancy is the weighted average of all available companies' 
         occupancies for that period weighted by the period's revenue. We take a weighted 
@@ -113,7 +113,7 @@ paths:
     post:
       tags:
         - Facility Pricing
-      summary: Get current facility pricing
+      summary: facility/pricing/current
       description: Gives you the current pricing information for the units you are requesting at a specific facility
       operationId: getCurrentFacilityPricing
       requestBody:
@@ -158,7 +158,7 @@ paths:
     post:
       tags:
         - Facility Pricing
-      summary: Get historical facility pricing
+      summary: facility/pricing/historical
       description: |
         Gives you historical pricing information for the units you are requesting in the 
         requested rollup. We do strict rollups so if the rollup doesn't match the date range, 
@@ -207,7 +207,7 @@ paths:
     post:
       tags:
         - Market Pricing
-      summary: Get current market pricing
+      summary: market/pricing/current
       description: Gives you the current pricing information for the units you are requesting in a particular market or geography
       operationId: getCurrentMarketPricing
       requestBody:
@@ -251,7 +251,7 @@ paths:
     post:
       tags:
         - Market Pricing
-      summary: Get current market pricing (rolled up)
+      summary: market/pricing/current/rollup
       description: Gives you the current pricing information rolled up for the entire market
       operationId: getCurrentMarketPricingRollup
       requestBody:
@@ -298,7 +298,7 @@ paths:
     post:
       tags:
         - Market Pricing
-      summary: Get historical market pricing
+      summary: market/pricing/historical
       description: |
         Gives you historical pricing information for the units you are requesting in the 
         requested rollup. Returns data per facility.
@@ -345,7 +345,7 @@ paths:
     post:
       tags:
         - Market Pricing
-      summary: Get historical market pricing (rolled up)
+      summary: market/pricing/historical/rollup
       description: |
         Gives you historical pricing information rolled up for the entire geography.
       operationId: getHistoricalMarketPricingRollup
