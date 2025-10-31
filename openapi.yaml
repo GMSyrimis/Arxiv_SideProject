@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Radius+ API
+  title: Radius Plus API
   description: |
     API for accessing storage facility pricing data and REIT occupancy information.
     
@@ -25,8 +25,10 @@ tags:
     description: Facility-level pricing data
   - name: Market Pricing
     description: Market-level pricing data
-  - name: Geographies
-    description: All geography type schemas
+  - name: Geographies / Universal
+    description: Country-agnostic geography types
+  - name: Geographies / US
+    description: US-specific geography types
 
 paths:
   /reit/occupancy/usa:
@@ -39,6 +41,8 @@ paths:
         by annual reports. Each company provided information on the most relevant CBSAs for their 
         company, therefore not all time frames or CBSAs have data available. This endpoint requires 
         the timeframe.rollup to be set to quarterly.
+        
+        **Geography Limitations:** This endpoint only supports Country, USRegion, and USCBSA geography types.
       operationId: getREITOccupancy
       requestBody:
         required: true
@@ -51,7 +55,7 @@ paths:
                 - timeframe
               properties:
                 geography:
-                  $ref: '#/components/schemas/Geography'
+                  $ref: '#/components/schemas/REITOccupancyGeography'
                 timeframe:
                   $ref: '#/components/schemas/Timeframe'
                 companies:
@@ -91,6 +95,8 @@ paths:
         occupancies for that period weighted by the period's revenue. We take a weighted 
         average of all CBSAs in that region using the revenue from all companies with 
         available data.
+        
+        **Geography Limitations:** This endpoint only supports Country, USRegion, and USCBSA geography types.
       operationId: getREITOccupancyWeighted
       requestBody:
         required: true
@@ -103,7 +109,7 @@ paths:
                 - timeframe
               properties:
                 geography:
-                  $ref: '#/components/schemas/Geography'
+                  $ref: '#/components/schemas/REITOccupancyGeography'
                 timeframe:
                   $ref: '#/components/schemas/Timeframe'
                 companies:
@@ -481,10 +487,30 @@ components:
         - type
         - value
 
+    REITOccupancyGeography:
+      type: object
+      description: Geography object for REIT Occupancy endpoints. Limited to Country, USRegion, and USCBSA.
+      properties:
+        type:
+          type: string
+          description: Type of geography
+          enum:
+            - Country
+            - USRegion
+            - USCBSA
+        value:
+          oneOf:
+            - $ref: '#/components/schemas/CountryValue'
+            - $ref: '#/components/schemas/USRegionValue'
+            - $ref: '#/components/schemas/USCBSAValue'
+      required:
+        - type
+        - value
+
     CountryValue:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / Universal
       properties:
         country:
           type: string
@@ -495,7 +521,7 @@ components:
     PolygonValue:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / Universal
       properties:
         wkt:
           type: string
@@ -506,7 +532,7 @@ components:
     LatLngRadiusValue:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / Universal
       properties:
         lat_lng:
           type: array
@@ -530,7 +556,7 @@ components:
     LatLngDriveTimeValue:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / Universal
       properties:
         lat_lng:
           type: array
@@ -554,7 +580,7 @@ components:
     LatLngValue:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / Universal
       properties:
         lat_lng:
           type: array
@@ -569,7 +595,7 @@ components:
     USRegionValue:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / US
       properties:
         region:
           type: string
@@ -580,7 +606,7 @@ components:
     USStateValue:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / US
       properties:
         state:
           type: string
@@ -591,7 +617,7 @@ components:
     USCountyValue:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / US
       properties:
         state:
           type: string
@@ -606,7 +632,7 @@ components:
     USCBSAValue:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / US
       properties:
         cbsa:
           type: string
@@ -617,7 +643,7 @@ components:
     USCityValue:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / US
       properties:
         country:
           type: string
@@ -636,7 +662,7 @@ components:
     USZipcodeValue:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / US
       properties:
         country:
           type: string
@@ -651,7 +677,7 @@ components:
     USCensusTractValue:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / US
       properties:
         fips:
           type: string
@@ -662,7 +688,7 @@ components:
     USCensusBlockGroupValue:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / US
       properties:
         fips:
           type: string
@@ -673,7 +699,7 @@ components:
     USAddressValue:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / US
       properties:
         address:
           type: string
@@ -684,7 +710,7 @@ components:
     USStructuredAddressValue:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / US
       properties:
         street_address:
           type: string
@@ -714,7 +740,7 @@ components:
     USAddressRadiusValue:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / US
       properties:
         address:
           type: string
@@ -734,7 +760,7 @@ components:
     USAddressDriveTimeValue:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / US
       properties:
         address:
           type: string
@@ -754,7 +780,7 @@ components:
     USStructuredAddressRadiusValue:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / US
       properties:
         address:
           $ref: '#/components/schemas/StructuredAddress'
@@ -773,7 +799,7 @@ components:
     USStructuredAddressDriveTimeValue:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / US
       properties:
         address:
           $ref: '#/components/schemas/StructuredAddress'
@@ -792,7 +818,7 @@ components:
     StructuredAddress:
       type: object
       x-tags:
-        - Geographies
+        - Geographies / US
       properties:
         street_address:
           type: string
