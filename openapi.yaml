@@ -418,6 +418,26 @@ components:
         - $ref: '#/components/schemas/USStructuredAddressDriveTimeGeography'
       discriminator:
         propertyName: type
+        mapping:
+          country: '#/components/schemas/CountryGeography'
+          wkt: '#/components/schemas/PolygonGeography'
+          lat_lng_radius: '#/components/schemas/LatLngRadiusGeography'
+          lat_lng_drive_time: '#/components/schemas/LatLngDriveTimeGeography'
+          lat_lng: '#/components/schemas/LatLngGeography'
+          us_region: '#/components/schemas/USRegionGeography'
+          us_state: '#/components/schemas/USStateGeography'
+          us_county: '#/components/schemas/USCountyGeography'
+          us_cbsa: '#/components/schemas/USCBSAGeography'
+          us_city: '#/components/schemas/USCityGeography'
+          us_zipcode: '#/components/schemas/USZipcodeGeography'
+          us_census_tract: '#/components/schemas/USCensusTractGeography'
+          us_census_block_group: '#/components/schemas/USCensusBlockGroupGeography'
+          us_address: '#/components/schemas/USAddressGeography'
+          us_structured_address: '#/components/schemas/USStructuredAddressGeography'
+          us_address_radius: '#/components/schemas/USAddressRadiusGeography'
+          us_address_drive_time: '#/components/schemas/USAddressDriveTimeGeography'
+          us_structured_address_radius: '#/components/schemas/USStructuredAddressRadiusGeography'
+          us_structured_address_drive_time: '#/components/schemas/USStructuredAddressDriveTimeGeography'
 
     CountryGeography:
       type: object
@@ -816,6 +836,12 @@ components:
         - $ref: '#/components/schemas/YearPeriod'
       discriminator:
         propertyName: type
+        mapping:
+          date: '#/components/schemas/DatePeriod'
+          week: '#/components/schemas/WeekPeriod'
+          month: '#/components/schemas/MonthPeriod'
+          quarter: '#/components/schemas/QuarterPeriod'
+          year: '#/components/schemas/YearPeriod'
 
     DatePeriod:
       type: object
