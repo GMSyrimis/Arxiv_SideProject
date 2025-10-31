@@ -1,0 +1,1126 @@
+openapi: 3.0.3
+info:
+  title: Radius+ API
+  description: |
+    API for accessing storage facility pricing data and REIT occupancy information.
+    
+    **Features:**
+    - Facility-level and market-level pricing data
+    - Historical and current pricing information
+    - REIT occupancy data for the USA
+    - Flexible geography and timeframe filtering
+    - Unit size and feature filtering
+  version: 1.0.0
+  contact:
+    name: API Support
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+
+tags:
+  - name: REIT
+    description: REIT occupancy information
+  - name: Facility Pricing
+    description: Facility-level pricing data
+  - name: Market Pricing
+    description: Market-level pricing data
+  - name: Geographies / Universal
+    description: Country-agnostic geography types
+  - name: Geographies / US
+    description: US-specific geography types
+
+paths:
+  /reit/occupancy/usa:
+    post:
+      tags:
+        - REIT
+      summary: reit/occupancy/usa
+      description: |
+        Gets REIT occupancy information in the USA. This is publicly known information provided 
+        by annual reports. Each company provided information on the most relevant CBSAs for their 
+        company, therefore not all time frames or CBSAs have data available. This endpoint requires 
+        the timeframe.rollup to be set to quarterly.
+        
+        **Geography Limitations:** This endpoint only supports Country, USRegion, and USCBSA geography types.
+      operationId: getREITOccupancy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - geography
+                - timeframe
+              properties:
+                geography:
+                  $ref: '#/components/schemas/REITOccupancyGeography'
+                timeframe:
+                  $ref: '#/components/schemas/Timeframe'
+                companies:
+                  type: array
+                  items:
+                    type: string
+                  description: Optional array of company names to filter by
+                  example: ["Public Storage", "Extra Space"]
+            example:
+              geography:
+                type: us_region
+                region: Midwest
+              timeframe:
+                period:
+                  type: quarter
+                  value: 2025-Q1/2025-Q2
+                rollup: quarterly
+              companies: ["Public Storage", "Extra Space"]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/REITOccupancyData'
+
+  /reit/occupancy/usa/weighted:
+    post:
+      tags:
+        - REIT
+      summary: reit/occupancy/usa/weighted
+      description: |
+        For each period, the occupancy is the weighted average of all available companies' 
+        occupancies for that period weighted by the period's revenue. We take a weighted 
+        average of all CBSAs in that region using the revenue from all companies with 
+        available data.
+        
+        **Geography Limitations:** This endpoint only supports Country, USRegion, and USCBSA geography types.
+      operationId: getREITOccupancyWeighted
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - geography
+                - timeframe
+              properties:
+                geography:
+                  $ref: '#/components/schemas/REITOccupancyGeography'
+                timeframe:
+                  $ref: '#/components/schemas/Timeframe'
+                companies:
+                  type: array
+                  items:
+                    type: string
+                  description: Optional array of company names to filter by
+                  example: ["Public Storage", "Extra Space"]
+            example:
+              geography:
+                type: us_region
+                region: Midwest
+              timeframe:
+                period:
+                  type: quarter
+                  value: 2025-Q1/2025-Q2
+                rollup: quarterly
+              companies: ["Public Storage", "Extra Space"]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/REITOccupancyData'
+
+  /facility/pricing/current:
+    post:
+      tags:
+        - Facility Pricing
+      summary: facility/pricing/current
+      description: Gives you the current pricing information for the units you are requesting at a specific facility
+      operationId: getCurrentFacilityPricing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - address
+              properties:
+                address:
+                  type: string
+                  example: "123 Main St, Sarasota, FL, 34231, USA"
+                unit_sizes:
+                  type: array
+                  items:
+                    type: string
+                  description: Array of unit sizes (OR logic - returns any matching size)
+                  example: ["5x5", "5x10"]
+                features:
+                  type: array
+                  items:
+                    type: string
+                  description: Array of features (AND logic - returns units with all specified features)
+                  example: ["climate_controlled", "first_floor"]
+                pricing_type:
+                  type: array
+                  items:
+                    type: string
+                    enum: [web, instore]
+                  example: ["web", "instore"]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilityPricingResponse'
+
+  /facility/pricing/historical:
+    post:
+      tags:
+        - Facility Pricing
+      summary: facility/pricing/historical
+      description: |
+        Gives you historical pricing information for the units you are requesting in the 
+        requested rollup. We do strict rollups so if the rollup doesn't match the date range, 
+        we throw an error. All dates are inclusive.
+      operationId: getHistoricalFacilityPricing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - address
+                - timeframe
+              properties:
+                address:
+                  type: string
+                  example: "123 Main St, Sarasota, FL, 34231, USA"
+                timeframe:
+                  $ref: '#/components/schemas/Timeframe'
+                unit_sizes:
+                  type: array
+                  items:
+                    type: string
+                  example: ["5x5"]
+                features:
+                  type: array
+                  items:
+                    type: string
+                  example: ["climate_controlled", "first_floor"]
+                pricing_type:
+                  type: array
+                  items:
+                    type: string
+                    enum: [web, instore]
+                  example: ["web", "instore"]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilityHistoricalPricingResponse'
+
+  /market/pricing/current:
+    post:
+      tags:
+        - Market Pricing
+      summary: market/pricing/current
+      description: Gives you the current pricing information for the units you are requesting in a particular market or geography
+      operationId: getCurrentMarketPricing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - geography
+              properties:
+                geography:
+                  $ref: '#/components/schemas/Geography'
+                unit_sizes:
+                  type: array
+                  items:
+                    type: string
+                  example: ["5x5", "5x10"]
+                features:
+                  type: array
+                  items:
+                    type: string
+                  example: ["climate_controlled"]
+                pricing_type:
+                  type: array
+                  items:
+                    type: string
+                    enum: [web, instore]
+                  example: ["web", "instore"]
+            example:
+              geography:
+                type: us_address_radius
+                address: "405 Lexington Ave, New York, NY 10174, USA"
+                distance: 4.2
+                units: miles
+              unit_sizes: ["5x5", "5x10"]
+              features: ["climate_controlled"]
+              pricing_type: ["web", "instore"]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FacilityPricingResponse'
+
+  /market/pricing/current/rollup:
+    post:
+      tags:
+        - Market Pricing
+      summary: market/pricing/current/rollup
+      description: Gives you the current pricing information rolled up for the entire market
+      operationId: getCurrentMarketPricingRollup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - geography
+              properties:
+                geography:
+                  $ref: '#/components/schemas/Geography'
+                unit_sizes:
+                  type: array
+                  items:
+                    type: string
+                  example: ["5x5", "5x10"]
+                features:
+                  type: array
+                  items:
+                    type: string
+                  example: ["climate_controlled"]
+                pricing_type:
+                  type: array
+                  items:
+                    type: string
+                    enum: [web, instore]
+                  example: ["web", "instore"]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  units:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RolledUpUnit'
+
+  /market/pricing/historical:
+    post:
+      tags:
+        - Market Pricing
+      summary: market/pricing/historical
+      description: |
+        Gives you historical pricing information for the units you are requesting in the 
+        requested rollup. Returns data per facility.
+      operationId: getHistoricalMarketPricing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - geography
+                - timeframe
+              properties:
+                geography:
+                  $ref: '#/components/schemas/Geography'
+                timeframe:
+                  $ref: '#/components/schemas/Timeframe'
+                unit_sizes:
+                  type: array
+                  items:
+                    type: string
+                  example: ["5x5", "5x10"]
+                features:
+                  type: array
+                  items:
+                    type: string
+                  example: ["climate_controlled"]
+                pricing_type:
+                  type: array
+                  items:
+                    type: string
+                    enum: [web, instore]
+                  example: ["web", "instore"]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilityHistoricalPricingResponse'
+
+  /market/pricing/historical/rollup:
+    post:
+      tags:
+        - Market Pricing
+      summary: market/pricing/historical/rollup
+      description: |
+        Gives you historical pricing information rolled up for the entire geography.
+      operationId: getHistoricalMarketPricingRollup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - geography
+                - timeframe
+              properties:
+                geography:
+                  $ref: '#/components/schemas/Geography'
+                timeframe:
+                  $ref: '#/components/schemas/Timeframe'
+                unit_sizes:
+                  type: array
+                  items:
+                    type: string
+                  example: ["5x5", "5x10"]
+                features:
+                  type: array
+                  items:
+                    type: string
+                  example: ["climate_controlled"]
+                pricing_type:
+                  type: array
+                  items:
+                    type: string
+                    enum: [web, instore]
+                  example: ["web", "instore"]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  units:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RolledUpHistoricalUnit'
+
+components:
+  schemas:
+    # Geography Base Schema
+    GeographyBase:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+      discriminator:
+        propertyName: type
+        mapping:
+          country: '#/components/schemas/Country'
+          wkt: '#/components/schemas/Polygon'
+          lat_lng_radius: '#/components/schemas/LatLngRadius'
+          lat_lng_drive_time: '#/components/schemas/LatLngDriveTime'
+          lat_lng: '#/components/schemas/LatLng'
+          us_region: '#/components/schemas/USRegion'
+          us_state: '#/components/schemas/USState'
+          us_county: '#/components/schemas/USCounty'
+          us_cbsa: '#/components/schemas/USCBSA'
+          us_city: '#/components/schemas/USCity'
+          us_zipcode: '#/components/schemas/USZipcode'
+          us_census_tract: '#/components/schemas/USCensusTract'
+          us_census_block_group: '#/components/schemas/USCensusBlockGroup'
+          us_address: '#/components/schemas/USAddress'
+          us_structured_address: '#/components/schemas/USStructuredAddress'
+          us_address_radius: '#/components/schemas/USAddressRadius'
+          us_address_drive_time: '#/components/schemas/USAddressDriveTime'
+          us_structured_address_radius: '#/components/schemas/USStructuredAddressRadius'
+          us_structured_address_drive_time: '#/components/schemas/USStructuredAddressDriveTime'
+
+    # Geography Types
+    Geography:
+      $ref: '#/components/schemas/GeographyBase'
+
+    REITOccupancyGeography:
+      type: object
+      x-tags:
+        - Geographies / US
+      description: Geography object for REIT Occupancy endpoints. Limited to Country, USRegion, and USCBSA.
+      oneOf:
+        - $ref: '#/components/schemas/Country'
+        - $ref: '#/components/schemas/USRegion'
+        - $ref: '#/components/schemas/USCBSA'
+
+    # Geography Types
+    Country:
+      allOf:
+        - $ref: '#/components/schemas/GeographyBase'
+        - type: object
+          x-tags:
+            - Geographies / Universal
+          properties:
+            country:
+              type: string
+              example: "USA"
+          required:
+            - country
+
+    Polygon:
+      allOf:
+        - $ref: '#/components/schemas/GeographyBase'
+        - type: object
+          x-tags:
+            - Geographies / Universal
+          properties:
+            wkt:
+              type: string
+              example: "POLYGON ((-73.993778 40.770662, -74.012833 40.741403, -73.990517 40.726316, -73.963051 40.747387, -73.954639 40.763901, -73.993778 40.770662))"
+          required:
+            - wkt
+
+    LatLngRadius:
+      allOf:
+        - $ref: '#/components/schemas/GeographyBase'
+        - type: object
+          x-tags:
+            - Geographies / Universal
+          properties:
+            lat_lng:
+              type: array
+              items:
+                type: number
+              minItems: 2
+              maxItems: 2
+              example: [-12.1234234, 23.1234234]
+            distance:
+              type: number
+              example: 4.2
+            units:
+              type: string
+              enum: [miles, kilometers]
+              example: "miles"
+          required:
+            - lat_lng
+            - distance
+            - units
+
+    LatLngDriveTime:
+      allOf:
+        - $ref: '#/components/schemas/GeographyBase'
+        - type: object
+          x-tags:
+            - Geographies / Universal
+          properties:
+            lat_lng:
+              type: array
+              items:
+                type: number
+              minItems: 2
+              maxItems: 2
+              example: [-13.324233, 12.1234423]
+            drive_time:
+              type: number
+              example: 15
+            units:
+              type: string
+              enum: [minutes]
+              example: "minutes"
+          required:
+            - lat_lng
+            - drive_time
+            - units
+
+    LatLng:
+      allOf:
+        - $ref: '#/components/schemas/GeographyBase'
+        - type: object
+          x-tags:
+            - Geographies / Universal
+          properties:
+            lat_lng:
+              type: array
+              items:
+                type: number
+              minItems: 2
+              maxItems: 2
+              example: [-13.324233, 12.1234423]
+          required:
+            - lat_lng
+
+    USRegion:
+      allOf:
+        - $ref: '#/components/schemas/GeographyBase'
+        - type: object
+          x-tags:
+            - Geographies / US
+          properties:
+            region:
+              type: string
+              example: "Midwest"
+          required:
+            - region
+
+    USState:
+      allOf:
+        - $ref: '#/components/schemas/GeographyBase'
+        - type: object
+          x-tags:
+            - Geographies / US
+          properties:
+            state:
+              type: string
+              example: "NY"
+          required:
+            - state
+
+    USCounty:
+      allOf:
+        - $ref: '#/components/schemas/GeographyBase'
+        - type: object
+          x-tags:
+            - Geographies / US
+          properties:
+            state:
+              type: string
+              example: "NY"
+            county:
+              type: string
+              example: "Tompkins"
+          required:
+            - state
+            - county
+
+    USCBSA:
+      allOf:
+        - $ref: '#/components/schemas/GeographyBase'
+        - type: object
+          x-tags:
+            - Geographies / US
+          properties:
+            cbsa:
+              type: string
+              example: "Dallas-Fort Worth-Arlington, TX"
+          required:
+            - cbsa
+
+    USCity:
+      allOf:
+        - $ref: '#/components/schemas/GeographyBase'
+        - type: object
+          x-tags:
+            - Geographies / US
+          properties:
+            country:
+              type: string
+              example: "USA"
+            state:
+              type: string
+              example: "TX"
+            city:
+              type: string
+              example: "Dallas"
+          required:
+            - country
+            - state
+            - city
+
+    USZipcode:
+      allOf:
+        - $ref: '#/components/schemas/GeographyBase'
+        - type: object
+          x-tags:
+            - Geographies / US
+          properties:
+            country:
+              type: string
+              example: "US"
+            zipcode:
+              type: string
+              example: "90210"
+          required:
+            - country
+            - zipcode
+
+    USCensusTract:
+      allOf:
+        - $ref: '#/components/schemas/GeographyBase'
+        - type: object
+          x-tags:
+            - Geographies / US
+          properties:
+            fips:
+              type: string
+              example: "36109012300"
+          required:
+            - fips
+
+    USCensusBlockGroup:
+      allOf:
+        - $ref: '#/components/schemas/GeographyBase'
+        - type: object
+          x-tags:
+            - Geographies / US
+          properties:
+            fips:
+              type: string
+              example: "361090123002"
+          required:
+            - fips
+
+    USAddress:
+      allOf:
+        - $ref: '#/components/schemas/GeographyBase'
+        - type: object
+          x-tags:
+            - Geographies / US
+          properties:
+            address:
+              type: string
+              example: "2810 Mayflower St, Sarasota, FL 34231, USA"
+          required:
+            - address
+
+    USStructuredAddress:
+      allOf:
+        - $ref: '#/components/schemas/GeographyBase'
+        - type: object
+          x-tags:
+            - Geographies / US
+          properties:
+            street_address:
+              type: string
+              example: "2810 Mayflower St."
+            address_line_2:
+              type: string
+              example: ""
+            city:
+              type: string
+              example: "Sarasota"
+            state:
+              type: string
+              example: "FL"
+            zipcode:
+              type: string
+              example: "34231"
+            country:
+              type: string
+              example: "USA"
+          required:
+            - street_address
+            - city
+            - state
+            - zipcode
+            - country
+
+    USAddressRadius:
+      allOf:
+        - $ref: '#/components/schemas/GeographyBase'
+        - type: object
+          x-tags:
+            - Geographies / US
+          properties:
+            address:
+              type: string
+              example: "405 Lexington Ave, New York, NY 10174, USA"
+            distance:
+              type: number
+              example: 3.0
+            units:
+              type: string
+              enum: [miles, kilometers]
+              example: "miles"
+          required:
+            - address
+            - distance
+            - units
+
+    USAddressDriveTime:
+      allOf:
+        - $ref: '#/components/schemas/GeographyBase'
+        - type: object
+          x-tags:
+            - Geographies / US
+          properties:
+            address:
+              type: string
+              example: "405 Lexington Ave, New York, NY 10174, USA"
+            drive_time:
+              type: number
+              example: 15
+            units:
+              type: string
+              enum: [minutes]
+              example: "minutes"
+          required:
+            - address
+            - drive_time
+            - units
+
+    USStructuredAddressRadius:
+      allOf:
+        - $ref: '#/components/schemas/GeographyBase'
+        - type: object
+          x-tags:
+            - Geographies / US
+          properties:
+            address:
+              type: object
+              properties:
+                street_address:
+                  type: string
+                  example: "2810 Mayflower St."
+                address_line_2:
+                  type: string
+                  example: ""
+                city:
+                  type: string
+                  example: "Sarasota"
+                state:
+                  type: string
+                  example: "FL"
+                zipcode:
+                  type: string
+                  example: "34231"
+                country:
+                  type: string
+                  example: "US"
+              required:
+                - street_address
+                - city
+                - state
+                - zipcode
+                - country
+            distance:
+              type: number
+              example: 4.2
+            units:
+              type: string
+              enum: [miles, kilometers]
+              example: "miles"
+          required:
+            - address
+            - distance
+            - units
+
+    USStructuredAddressDriveTime:
+      allOf:
+        - $ref: '#/components/schemas/GeographyBase'
+        - type: object
+          x-tags:
+            - Geographies / US
+          properties:
+            address:
+              type: object
+              properties:
+                street_address:
+                  type: string
+                  example: "2810 Mayflower St."
+                address_line_2:
+                  type: string
+                  example: ""
+                city:
+                  type: string
+                  example: "Sarasota"
+                state:
+                  type: string
+                  example: "FL"
+                zipcode:
+                  type: string
+                  example: "34231"
+                country:
+                  type: string
+                  example: "US"
+              required:
+                - street_address
+                - city
+                - state
+                - zipcode
+                - country
+            drive_time:
+              type: number
+              example: 15
+            units:
+              type: string
+              enum: [minutes]
+              example: "minutes"
+          required:
+            - address
+            - drive_time
+            - units
+
+    # Timeframe Types
+    Timeframe:
+      type: object
+      description: Defines the time period and rollup aggregation level.
+      properties:
+        period:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [date, week, month, quarter, year]
+            value:
+              type: string
+              description: ISO-8601 formatted value. Can be a single period or a range (e.g., "2025-10-13" or "2025-10-11/2025-10-13")
+          required:
+            - type
+            - value
+        rollup:
+          type: string
+          enum: [daily, weekly, monthly, quarterly, yearly]
+          example: "daily"
+      required:
+        - period
+        - rollup
+
+    # REIT Schemas
+    REITOccupancyData:
+      type: object
+      properties:
+        date:
+          type: string
+          example: "2025-Q1"
+        company:
+          type: string
+          example: "Public Storage"
+        occupancy:
+          type: number
+          format: float
+          example: 90.13
+
+    # Pricing Response Schemas
+    FacilityPricingResponse:
+      type: object
+      properties:
+        facility:
+          $ref: '#/components/schemas/Facility'
+        units:
+          type: array
+          items:
+            $ref: '#/components/schemas/Unit'
+
+    FacilityHistoricalPricingResponse:
+      type: object
+      properties:
+        facility:
+          $ref: '#/components/schemas/Facility'
+        units:
+          type: array
+          items:
+            $ref: '#/components/schemas/HistoricalUnit'
+
+    Facility:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "asdfs-sdfs-vsd-asdvvsa"
+        name:
+          type: string
+          example: "Cubesmart"
+        address:
+          type: string
+          example: "123 Main St, Sarasota, FL, 34231, USA"
+
+    Unit:
+      type: object
+      properties:
+        unit_size:
+          type: string
+          example: "5x5"
+        status:
+          type: string
+          enum: [available, "sold out"]
+          example: "available"
+        promo_text:
+          type: string
+          nullable: true
+          example: "1st Month Free"
+        features:
+          type: array
+          items:
+            type: string
+          example: ["climate_controlled", "first_floor"]
+        source_url:
+          type: string
+          format: uri
+          example: "https://example.com/units/5x5"
+        pricing:
+          type: array
+          items:
+            $ref: '#/components/schemas/CurrentPricing'
+
+    CurrentPricing:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [web, instore]
+          example: "web"
+        price:
+          type: number
+          format: float
+          example: 97.00
+        currency:
+          type: string
+          example: "USD"
+        last_updated:
+          type: string
+          format: date-time
+          example: "2025-10-27T18:41:29Z"
+
+    HistoricalUnit:
+      type: object
+      properties:
+        unit_size:
+          type: string
+          example: "5x5"
+        features:
+          type: array
+          items:
+            type: string
+          example: ["climate_controlled", "first_floor"]
+        pricing:
+          type: array
+          items:
+            $ref: '#/components/schemas/HistoricalPricing'
+
+    HistoricalPricing:
+      type: object
+      properties:
+        date:
+          type: string
+          description: Date or date range
+          example: "2025-09-13"
+        type:
+          type: string
+          enum: [web, instore]
+          example: "web"
+        high:
+          type: number
+          format: float
+          nullable: true
+          example: 97.00
+        low:
+          type: number
+          format: float
+          nullable: true
+          example: 97.00
+        avg:
+          type: number
+          format: float
+          nullable: true
+          example: 97.00
+        currency:
+          type: string
+          example: "USD"
+
+    RolledUpUnit:
+      type: object
+      properties:
+        unit_size:
+          type: string
+          example: "5x5"
+        features:
+          type: array
+          items:
+            type: string
+          example: ["climate_controlled", "first_floor"]
+        pricing:
+          type: array
+          items:
+            $ref: '#/components/schemas/RolledUpPricing'
+
+    RolledUpPricing:
+      type: object
+      properties:
+        date:
+          type: string
+          example: "2025-09-13"
+        type:
+          type: string
+          enum: [web, instore]
+          example: "web"
+        high:
+          type: number
+          format: float
+          example: 197.00
+        low:
+          type: number
+          format: float
+          example: 97.00
+        avg:
+          type: number
+          format: float
+          example: 127.00
+        currency:
+          type: string
+          example: "USD"
+
+    RolledUpHistoricalUnit:
+      type: object
+      properties:
+        unit_size:
+          type: string
+          example: "5x5"
+        features:
+          type: array
+          items:
+            type: string
+          example: ["climate_controlled", "first_floor"]
+        pricing:
+          type: array
+          items:
+            $ref: '#/components/schemas/RolledUpHistoricalPricing'
+
+    RolledUpHistoricalPricing:
+      type: object
+      properties:
+        date:
+          type: string
+          description: Date range matching the rollup period
+          example: "2025-09-01/2025-09-30"
+        type:
+          type: string
+          enum: [web, instore]
+          example: "web"
+        high:
+          type: number
+          format: float
+          example: 197.00
+        low:
+          type: number
+          format: float
+          example: 97.00
+        avg:
+          type: number
+          format: float
+          example: 127.00
+        currency:
+          type: string
+          example: "USD"
